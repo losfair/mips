@@ -5,6 +5,8 @@ reg rst;
 
 mips mips_1(clk, rst);
 
+reg first;
+
 initial begin
     clk <= 0;
     rst <= 1;

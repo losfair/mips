@@ -1,3 +1,7 @@
+testbench.v
+
+datapath/consts.v
+
 mips.v
 datapath/dm.v
 datapath/alu.v
@@ -7,6 +11,5 @@ datapath/npc.v
 datapath/decoder.v
 datapath/mux2.v
 datapath/regfile.v
+datapath/maccess.v
 control/ctrl.v
-
-testbench.v

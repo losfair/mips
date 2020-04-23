@@ -13,12 +13,18 @@ output reg [31:0] dout;
 
 reg [31:0] dm [1023:0]; // 1024 * 4 = 4096
 
+integer i;
+
+initial begin
+    for(i = 0; i < 1024; i = i + 1) dm[i] <= 0;
+end
+
+always @ (*) begin
+    dout <= dm[addr];
+end
+
 always @ (posedge clk) begin
-    if(we) begin
-        dm[addr] <= din;
-    end else begin
-        dout <= dm[addr];
-    end
+    if(we) dm[addr] <= din;
 end
 
 endmodule
