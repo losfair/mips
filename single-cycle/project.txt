@@ -1,6 +1,6 @@
 testbench.v
 
-datapath/consts.v
+consts.v
 
 mips.v
 datapath/dm.v

@@ -1,7 +1,10 @@
-all: hardware bootcode
+all: simulate synthesis
 
-hardware:
+simulate:
 	iverilog -o mips -c project.txt
+
+synthesis:
+	yosys synthesis.ys
 
 bootcode:
 	mipsel-linux-gnu-gcc -ffreestanding -nostdlib -c -o ./bootcode/boot.o ./bootcode/boot.S
@@ -10,6 +13,6 @@ bootcode:
 	python3 ./scripts/hexencode.py < code.bin > code.txt
 
 clean:
-	rm *.elf *.bin ./bootcode/*.o code.txt mips
+	rm *.elf *.bin ./bootcode/*.o mips synth.v netlist.json
 
-.PHONY: bootcode clean
+.PHONY: simulate synthesis clean

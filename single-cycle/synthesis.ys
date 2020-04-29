@@ -1,0 +1,13 @@
+read_verilog consts.v
+read_verilog mips.v
+read_verilog datapath/*.v
+
+hierarchy -check
+
+# high-level synthesis
+proc; opt; fsm; opt; memory; opt
+
+stat;
+
+write_verilog synth.v
+write_json netlist.json
