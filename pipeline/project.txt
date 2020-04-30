@@ -12,4 +12,5 @@ datapath/decoder.v
 datapath/mux2.v
 datapath/regfile.v
 datapath/maccess.v
+datapath/delay.v
 control/ctrl.v

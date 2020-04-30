@@ -1,5 +1,13 @@
 .section .text
 
+addiu $a0, $zero, 1
+nop
+nop
+sll $a0, $a0, 31
+nop
+nop
+addi $a0, $a0, -1
+
 addi $sp, $zero, 0x800
 addi $a0, $zero, 15
 jal fib
