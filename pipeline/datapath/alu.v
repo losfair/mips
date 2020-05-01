@@ -49,7 +49,7 @@ always @ (posedge clk) begin
     else begin
         if(br_enable) br_pending <= 1; // Delay slot
         else br_pending <= 0;
-        $write("[CYCLE@%0d] alu run pc=0x%0x op=%b br_enable=%b br_pending=%b br_trigger=%b\n", $time, next_pc - 4, op, br_enable, br_pending, br_trigger);
+        $write("[CYCLE@%0d] alu run pc=0x%0x op=%b rs_val=0x%0x rt_val=0x%0x br_enable=%b br_pending=%b br_trigger=%b\n", $time, next_pc - 4, op, rs_val, rt_val, br_enable, br_pending, br_trigger);
         case (op)
             // add
             `ALU_ADD: begin
@@ -90,6 +90,7 @@ always @ (posedge clk) begin
 
             // beq
             `ALU_BEQ: begin
+                $display("BEQ %0d %0d", rs_val, rt_val);
                 if(rs_val == rt_val) begin
                     br_target <= next_pc + (const_val << 2);
                     br_enable <= 1;
@@ -138,6 +139,7 @@ always @ (posedge clk) begin
             // lw/lb/sw/sb
             `ALU_MACCESS: begin
                 out_val <= rs_val + const_val;
+                $display("maccess at 0x%0x", rs_val + const_val);
             end
 
             `ALU_SLL: begin
@@ -174,6 +176,7 @@ always @ (posedge clk) begin
                 br_target <= rs_val;
                 br_enable <= 1;
                 out_val <= next_pc + 4;
+                $display("t=%0d ALU JALR", $time);
             end
 
             default: begin

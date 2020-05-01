@@ -13,6 +13,7 @@ module decoder(
     mem2reg_en,
     maccess_width, // ok
     mem2reg_zext, // ok
+    mread_stall,
     rs, rt, rd, // ok
     exception_in,
     exception
@@ -31,6 +32,7 @@ output reg [7:0] exception;
 
 output reg [31:0] alu_const; // Sign extension
 output reg [5:0] alu_op;
+output reg mread_stall;
 output reg [4:0] rs, rt, rd;
 
 wire [31:0] _alu_const_shamt;
@@ -67,6 +69,7 @@ always @ (posedge clk) begin
     alu_op <= `ALU_STALL;
     alu_check_overflow <= 0;
     mem2reg_en <= 0;
+    mread_stall <= 0;
 
     rs <= 0;
     rt <= 0;
@@ -74,6 +77,7 @@ always @ (posedge clk) begin
     alu_const <= 0;
 
     if(rst) exception <= `TRAP_STALL;
+    else if(mread_stall) exception <= `TRAP_STALL; // stall for one cycle on load from memory
     else if(exception_in) exception <= exception_in;
     else begin
         rs <= _rs;
@@ -90,6 +94,8 @@ always @ (posedge clk) begin
                 mem2reg_en <= 1;
                 mem2reg_zext <= 0;
                 rd <= _rt; // For the `lw` instruction, the destionation register is placed in `rt` instead of `rd`.
+
+                mread_stall <= 1;
             end
 
             // lb
@@ -100,6 +106,8 @@ always @ (posedge clk) begin
                 mem2reg_en <= 1;
                 mem2reg_zext <= 0;
                 rd <= _rt;
+
+                mread_stall <= 1;
             end
 
             // lbu
@@ -110,6 +118,8 @@ always @ (posedge clk) begin
                 mem2reg_en <= 1;
                 mem2reg_zext <= 1;
                 rd <= _rt;
+
+                mread_stall <= 1;
             end
 
             // sw

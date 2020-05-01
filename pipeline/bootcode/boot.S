@@ -1,15 +1,8 @@
 .section .text
 
-addiu $a0, $zero, 1
-nop
-nop
-sll $a0, $a0, 31
-nop
-nop
-addi $a0, $a0, -1
-
+start:
 addi $sp, $zero, 0x800
-addi $a0, $zero, 15
+addi $a0, $zero, 10
 jal fib
 syscall 42
 

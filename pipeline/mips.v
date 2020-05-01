@@ -23,7 +23,8 @@ wire
     mem_write_en_d0, mem_write_en_d1,
     reg_write_en_d0, reg_write_en_d1, reg_write_en_d2,
     mem2reg_en_d0, mem2reg_en_d1, mem2reg_en_d2,
-    alu_check_overflow;
+    alu_check_overflow,
+    id_mread_stall;
 reg br_trigger_d0;
 wire br_trigger_d1;
 
@@ -35,9 +36,10 @@ wire [31:0] alu_const;
 wire [5:0] alu_op;
 wire [4:0] rs, rt;
 wire [4:0] rd_d0, rd_d1, rd_d2;
-wire [31:0] rs_val_raw, rs_val, rt_val_raw, rt_val;
-mux2 #(32) mux2_rs_val(alu_const_as_rs, rs_val_raw, alu_const, rs_val);
-mux2 #(32) mux2_rt_val(alu_const_as_rt, rt_val_raw, alu_const, rt_val);
+wire [31:0] rs_val_raw, rs_val_fwd, rs_val, rt_val_raw, rt_val_fwd, rt_val, rt_val_d1;
+mux2 #(32) mux2_rs_val(alu_const_as_rs, rs_val_fwd, alu_const, rs_val);
+mux2 #(32) mux2_rt_val(alu_const_as_rt, rt_val_fwd, alu_const, rt_val);
+delay #(32) d1_rt_val(clk, rt_val, rt_val_d1);
 
 wire [7:0] if_exception, id_exception, ex_exception, mem_exception, wb_exception;
 
@@ -79,6 +81,7 @@ decoder decoder_1(
     mem2reg_en_d0,
     maccess_width_d0,
     mem2reg_zext_d0,
+    id_mread_stall,
     rs, rt, rd_d0,
     if_exception,
     id_exception
@@ -110,21 +113,31 @@ alu alu_1(
 
 // Stage 4: DM/MEM
 wire [31:0] dm_din;
-wire [31:0] dm_dout;
-wire [9:0] dm_addr;
-assign dm_addr = alu_out_d0[9:0];
-dm_4k dm_4k_1(clk, rst, dm_addr, dm_din, mem_write_en_d1, dm_dout, ex_exception, mem_exception);
+wire [31:0] dm_dout_sync;
+wire [11:0] dm_addr;
+assign dm_addr = alu_out_d0[11:0];
+dm_4k dm_4k_1(clk, rst, dm_addr, dm_din, mem_write_en_d1, dm_dout_sync, ex_exception, mem_exception);
 
 // Memory access middleware
 wire [1:0] maccess_addrtail;
-wire [31:0] maccess_dout;
+wire [31:0] maccess_dout_sync, maccess_dout_d0;
 assign maccess_addrtail = dm_addr[1:0];
-mread mread_1(maccess_addrtail, maccess_width_d1, mem2reg_zext_d1, dm_dout, maccess_dout);
-mwrite mwrite_1(maccess_addrtail, maccess_width_d1, rt_val, dm_dout, dm_din);
+mread mread_1(maccess_addrtail, maccess_width_d1, mem2reg_zext_d1, dm_dout_sync, maccess_dout_sync);
+mwrite mwrite_1(maccess_addrtail, maccess_width_d1, rt_val_d1, dm_dout_sync, dm_din);
+delay #(32) d0_maccess_dout(clk, maccess_dout_sync, maccess_dout_d0);
+
+// ID/EX forwarding logic
+forward forward_1(
+    clk, rst,
+    rd_d1, reg_write_en_d1, alu_out_d0, ex_exception, // EX output
+    rd_d2, mem2reg_en_d2, maccess_dout_d0, mem_exception, // MEM output
+    rs, rs_val_raw, rs_val_fwd, // ID: rs
+    rt, rt_val_raw, rt_val_fwd // ID: rt
+);
 
 // Stage 5: Register file/WB
 wire [31:0] reg_write_data;
-mux2 #(32) mux2_reg_write_data(mem2reg_en_d2, alu_out_d1, maccess_dout, reg_write_data);
+mux2 #(32) mux2_reg_write_data(mem2reg_en_d2, alu_out_d1, maccess_dout_d0, reg_write_data);
 regfile regfile_1(
     clk, rst,
     rs, rt,
@@ -157,7 +170,15 @@ always @ (posedge clk) begin
                 halted <= 1;
             end
             $write("[CYCLE@%0d] pc_id=0x%0x pc_ex=0x%0x\n", $time, pc_id, pc_ex);
-            if(br_enable) begin
+            $display("FWD stats: 0x%0x 0x%0x 0x%0x 0x%0x 0x%0x 0x%0x 0x%0x 0x%0x 0x%0x 0x%0x 0x%0x 0x%0x 0x%0x",
+                rd_d1, reg_write_en_d1, alu_out_d0, ex_exception, // EX output
+                rd_d2, mem2reg_en_d2, maccess_dout_d0, mem_exception, // MEM output
+                rs, rs_val_raw, rs_val_fwd, // ID: rs
+                rt, rt_val_raw, rt_val_fwd // ID: rt
+            );
+            $display("dm_addr=0x%0x", dm_addr);
+            if(id_mread_stall) $display("IM READ STALL"); // suspend IM read for one cycle
+            else if(br_enable) begin
                 pc_id <= br_target;
                 br_trigger_d0 <= 1;
             end else begin
