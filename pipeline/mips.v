@@ -87,17 +87,11 @@ decoder decoder_1(
 // Stage 3: ALU/EX
 wire [31:0] pc_ex_linear_next;
 wire [31:0] alu_out_d0, alu_out_d1;
-wire br_enable_d0, br_enable_d1, br_enable_d2;
-wire [31:0] br_target_d0, br_target_d1, br_target_d2;
+wire br_enable;
+wire [31:0] br_target;
 wire [7:0] alu_exception;
 
 delay #(32) d1_alu_out(clk, alu_out_d0, alu_out_d1);
-
-delay d1_br_enable(clk, br_enable_d0, br_enable_d1);
-delay d2_br_enable(clk, br_enable_d1, br_enable_d2);
-
-delay #(32) d1_br_target(clk, br_target_d0, br_target_d1);
-delay #(32) d2_br_target(clk, br_target_d1, br_target_d2);
 
 assign pc_ex_linear_next = pc_ex + 4;
 alu alu_1(
@@ -109,7 +103,7 @@ alu alu_1(
     rs_val, rt_val,
     alu_const,
     alu_out_d0,
-    br_target_d0, br_enable_d0,
+    br_target, br_enable,
     id_exception,
     ex_exception
 );
@@ -163,8 +157,8 @@ always @ (posedge clk) begin
                 halted <= 1;
             end
             $write("[CYCLE@%0d] pc_id=0x%0x pc_ex=0x%0x\n", $time, pc_id, pc_ex);
-            if(br_enable_d2) begin
-                pc_id <= br_target_d2;
+            if(br_enable) begin
+                pc_id <= br_target;
                 br_trigger_d0 <= 1;
             end else begin
                 pc_id <= pc_id + 4;

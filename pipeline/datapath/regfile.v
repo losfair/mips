@@ -29,8 +29,6 @@ always @ (*) begin
 end
 
 always @ (posedge clk) begin
-
-    $display("WB: exception_in = %b", exception_in);
     if(rst) begin
         for(i = 0; i < 32; i = i + 1) store[i] <= 0;
         $display("t=%0d regfile reset\n",$time);

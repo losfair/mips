@@ -47,8 +47,9 @@ always @ (posedge clk) begin
     else if(br_pending && !br_trigger) exception <= `TRAP_STALL;
     else if(exception_in) exception <= exception_in;
     else begin
-        $write("[CYCLE@%0d] alu run pc=0x%0x op=%b br_pending=%b br_trigger=%b\n", $time, next_pc - 4, op, br_pending, br_trigger);
-        br_pending <= 0;
+        if(br_enable) br_pending <= 1; // Delay slot
+        else br_pending <= 0;
+        $write("[CYCLE@%0d] alu run pc=0x%0x op=%b br_enable=%b br_pending=%b br_trigger=%b\n", $time, next_pc - 4, op, br_enable, br_pending, br_trigger);
         case (op)
             // add
             `ALU_ADD: begin
@@ -84,17 +85,14 @@ always @ (posedge clk) begin
             `ALU_BAL: begin
                 br_target <= next_pc + (const_val << 2);
                 br_enable <= 1;
-                br_pending <= 1;
                 out_val <= next_pc + 4;
             end
 
             // beq
             `ALU_BEQ: begin
                 if(rs_val == rt_val) begin
-                    $display("!!! BEQ %0d", const_val);
                     br_target <= next_pc + (const_val << 2);
                     br_enable <= 1;
-                    br_pending <= 1;
                 end
             end
 
@@ -103,7 +101,6 @@ always @ (posedge clk) begin
                 if($signed(rs_val) >= $signed(0)) begin
                     br_target <= next_pc + (const_val << 2);
                     br_enable <= 1;
-                    br_pending <= 1;
                 end
             end
 
@@ -112,7 +109,6 @@ always @ (posedge clk) begin
                 if($signed(rs_val) < $signed(0)) begin
                     br_target <= next_pc + (const_val << 2);
                     br_enable <= 1;
-                    br_pending <= 1;
                 end
             end
 
@@ -121,7 +117,6 @@ always @ (posedge clk) begin
                 if($signed(rs_val) > $signed(0)) begin
                     br_target <= next_pc + (const_val << 2);
                     br_enable <= 1;
-                    br_pending <= 1;
                 end
             end
 
@@ -130,7 +125,6 @@ always @ (posedge clk) begin
                 if($signed(rs_val) <= $signed(0)) begin
                     br_target <= next_pc + (const_val << 2);
                     br_enable <= 1;
-                    br_pending <= 1;
                 end
             end
 
@@ -138,7 +132,6 @@ always @ (posedge clk) begin
                 if(rs_val != rt_val) begin
                     br_target <= next_pc + (const_val << 2);
                     br_enable <= 1;
-                    br_pending <= 1;
                 end
             end
 
@@ -148,7 +141,6 @@ always @ (posedge clk) begin
             end
 
             `ALU_SLL: begin
-                $display("sll %0d %0d", rt_val, rs_val[4:0]);
                 out_val <= rt_val << rs_val[4:0];
             end
 
@@ -173,17 +165,14 @@ always @ (posedge clk) begin
             end
 
             `ALU_JAL: begin
-                $display("JAL const 0x%0x", const_val);
                 br_target <= {next_pc[31:28], const_val[27:0]};
                 br_enable <= 1;
-                br_pending <= 1;
                 out_val <= next_pc + 4;
             end
 
             `ALU_JALR: begin
                 br_target <= rs_val;
                 br_enable <= 1;
-                br_pending <= 1;
                 out_val <= next_pc + 4;
             end
 
