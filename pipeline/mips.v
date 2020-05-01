@@ -1,10 +1,12 @@
 module mips(
     clk,
-    rst
+    rst,
+    halted
 );
 
 input wire clk;
 input wire rst;
+output reg halted;
 
 // Connect up datapaths.
 
@@ -149,7 +151,6 @@ regfile regfile_1(
     wb_exception
 );
 
-reg halted;
 reg [63:0] cycle_count;
 
 // TODO: Move this to a proper location.
@@ -162,9 +163,8 @@ always @ (posedge clk) begin
         br_trigger_d0 <= 0;
     end else begin
         cycle_count <= cycle_count + 1;
-        if(halted) begin
-            $finish();
-        end else begin
+        if(halted);
+        else begin
             if(wb_exception != 0 && wb_exception != `TRAP_STALL) begin
                 $display("t=%0d HALTED for wb exception. exc=%b pc_id=0x%0x ir=%b cycles=%0d", $time, wb_exception, pc_id, ir, cycle_count);
                 halted <= 1;

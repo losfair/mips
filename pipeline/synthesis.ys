@@ -9,5 +9,7 @@ proc; opt; fsm; opt; memory; opt
 
 stat;
 
+prep -top mips;
+
 write_verilog synth.v
 write_json netlist.json

@@ -1,3 +1,4 @@
 mips
 netlist.json
 synth.v
+out.svg
