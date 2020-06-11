@@ -136,7 +136,7 @@ always @ (*) begin
         end
 
         `ALU_SRA: begin
-            out_val = $signed(rt_val) >> rs_val[4:0];
+            out_val = rt_val >>> rs_val[4:0];
         end
 
         `ALU_XOR: begin
