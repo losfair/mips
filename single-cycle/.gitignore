@@ -1,3 +1,4 @@
 mips
-netlist.json
+netlist*.json
 synth.v
+*.svg

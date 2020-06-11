@@ -1,6 +1,7 @@
 module mips(
     clk,
-    rst
+    rst,
+    pc
 );
 
 input wire clk;
@@ -9,7 +10,7 @@ input wire rst;
 // Connect up datapaths.
 
 // PC
-reg [31:0] pc;
+output reg [31:0] pc;
 
 // Current instruction and decoding information
 wire [31:0] ir;

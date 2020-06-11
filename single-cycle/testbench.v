@@ -2,8 +2,9 @@ module testbench();
 
 reg clk;
 reg rst;
+wire [31:0] pc;
 
-mips mips_1(clk, rst);
+mips mips_1(clk, rst, pc);
 
 reg first;
 
