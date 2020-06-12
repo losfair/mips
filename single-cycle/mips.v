@@ -86,14 +86,15 @@ wire [31:0] dm_dout;
 wire [9:0] dm_addr;
 assign dm_addr = alu_out[9:0];
 assign dm_we = mem_write_en & !has_exception;
-dm_4k dm_4k_1(dm_addr, dm_din, dm_we, clk, dm_dout);
+wire [3:0] dm_wbyte_enable;
+dm_4k dm_4k_1(dm_addr, dm_din, dm_we, dm_wbyte_enable, clk, dm_dout);
 
 // Memory access
 wire [1:0] maccess_addrtail;
 wire [31:0] maccess_dout;
 assign maccess_addrtail = dm_addr[1:0];
 mread mread_1(maccess_addrtail, maccess_width, mem2reg_zext, dm_dout, maccess_dout);
-mwrite mwrite_1(maccess_addrtail, maccess_width, rt_val, dm_dout, dm_din);
+mwrite mwrite_1(maccess_addrtail, maccess_width, rt_val, dm_wbyte_enable, dm_din);
 
 // Register file
 assign reg_write_en_real = reg_write_en & !has_exception;
