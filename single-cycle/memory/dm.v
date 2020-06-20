@@ -27,6 +27,7 @@ end
 
 always @ (posedge clk) begin
     if(we) begin
+        $display("[CYCLE@%0d] Write Enable. Address: 0x%0x, Data: 0x%0x, Byte enable: %b", $time, addr, din, wbyte_enable);
         if(wbyte_enable[0]) dm[addr][7:0] <= din[7:0];
         if(wbyte_enable[1]) dm[addr][15:8] <= din[15:8];
         if(wbyte_enable[2]) dm[addr][23:16] <= din[23:16];

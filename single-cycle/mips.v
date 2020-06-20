@@ -83,11 +83,11 @@ im_4k im_4k_1(im_addr, ir);
 // DM
 wire [31:0] dm_din;
 wire [31:0] dm_dout;
-wire [9:0] dm_addr;
-assign dm_addr = alu_out[9:0];
+wire [11:0] dm_addr;
+assign dm_addr = alu_out[11:0];
 assign dm_we = mem_write_en & !has_exception;
 wire [3:0] dm_wbyte_enable;
-dm_4k dm_4k_1(dm_addr, dm_din, dm_we, dm_wbyte_enable, clk, dm_dout);
+dm_4k dm_4k_1(dm_addr[11:2], dm_din, dm_we, dm_wbyte_enable, clk, dm_dout);
 
 // Memory access
 wire [1:0] maccess_addrtail;
@@ -137,7 +137,7 @@ always @ (posedge clk) begin
                 halted <= 1;
             end
             $write("[CYCLE@%0d] pc=0x%0x\n", $time, pc);
-            if(npc_next_pc == 0) $finish();
+            if(npc_next_pc == 0) halted <= 1;
             pc <= npc_next_pc;
         end
     end

@@ -328,6 +328,7 @@ always @ (*) begin
             rt_as_rd = 1;
             alu_op = `ALU_AND;
             reg_write_en = 1;
+            zext = 1;
         end
 
         // ori
@@ -336,6 +337,7 @@ always @ (*) begin
             rt_as_rd = 1;
             alu_op = `ALU_OR;
             reg_write_en = 1;
+            zext = 1;
         end
 
         // xori
@@ -344,6 +346,7 @@ always @ (*) begin
             rt_as_rd = 1;
             alu_op = `ALU_XOR;
             reg_write_en = 1;
+            zext = 1;
         end
 
         // slti

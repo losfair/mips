@@ -28,9 +28,6 @@ reg extra_bit;
 wire [31:0] next_pc;
 assign next_pc = next_pc_with_delay - 4;
 
-wire [31:0] rt_val_complement;
-assign rt_val_complement = !rt_val + 1;
-
 always @ (*) begin
     br_target = 0;
     br_enable = 0;
@@ -45,7 +42,7 @@ always @ (*) begin
         end
 
         `ALU_SUB: begin
-            {extra_bit, out_val} = {rs_val[31], rs_val} + {rt_val_complement[31], rt_val_complement};
+            {extra_bit, out_val} = {rs_val[31], rs_val} - {rt_val[31], rt_val};
             if((extra_bit ^ out_val[31]) & check_overflow) exception = `TRAP_OVERFLOW;
         end
 
@@ -136,7 +133,7 @@ always @ (*) begin
         end
 
         `ALU_SRA: begin
-            out_val = rt_val >>> rs_val[4:0];
+            out_val = $signed(rt_val) >>> rs_val[4:0];
         end
 
         `ALU_XOR: begin
